@@ -1,6 +1,6 @@
 import cors from "cors"
 import express from "express"
-import  dbConfig  from './conexion_db.js';
+import { connection } from './conexion_db.js';
 
 const app = express()
 app.use(cors()) // esto permite que la aplicacion backend pueda ser consumida por una aplicacion frontend
@@ -9,7 +9,7 @@ app.use(express.json()) // permite que Express interprete automáticamente el bo
 
 app.get('/prestamos', async (req, res) => {
     try {
-        const [rows] = await pool.query(`
+        const [rows] = await connection.query(`
         SELECT 
             p.id_prestamo,
             p.fecha_prestamo,
@@ -39,7 +39,7 @@ app.get('/prestamos/:id_prestamo', async (req, res) => {
     try {
         const { id_prestamo } = req.params
 
-        const [rows] = await pool.query(`
+        const [rows] = await connection.query(`
         SELECT 
             p.id_prestamo,
             p.fecha_prestamo,
@@ -87,7 +87,7 @@ app.post('/prestamos', async (req, res) => {
             estado
         ]
 
-        const [result] = await pool.query(query, values)
+        const [result] = await connection.query(query, values)
 
         res.status(201).json({
             mensaje: "prestamo creado exitosamente"
@@ -132,7 +132,7 @@ app.put('/prestamos/:id_prestamo', async (req, res) => {
             id_prestamo
         ]
 
-        const [result] = await pool.query(query, values)
+        const [result] = await connection.query(query, values)
 
         if (result.affectedRows != 0) {
             return res.json({ mensaje: "prestamo actualizado" })
@@ -158,7 +158,7 @@ app.delete('/prestamos/:id_prestamo', async (req, res) => {
             id_prestamo
         ]
 
-        const [result] = await pool.query(query, values)
+        const [result] = await connection.query(query, values)
 
         if (result.affectedRows != 0) {
             return res.json({ mensaje: "prestamo eliminado" })
@@ -181,7 +181,7 @@ app.delete('/prestamos/:id_prestamo', async (req, res) => {
 app.get('/prestamos/usuario/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const [rows] = await pool.query(`
+        const [rows] = await connection.query(`
             SELECT 
                 p.id_prestamo,
                 p.fecha_prestamo,
@@ -208,7 +208,7 @@ app.get('/prestamos/usuario/:id', async (req, res) => {
 // 2. Listar los 5 libros más prestados
 app.get('/libros/mas-prestados', async (req, res) => {
     try {
-        const [rows] = await pool.query(`
+        const [rows] = await connection.query(`
             SELECT 
                 l.isbn,
                 l.titulo,
@@ -234,7 +234,7 @@ app.get('/libros/mas-prestados', async (req, res) => {
 // 3. Listar usuarios con préstamos en estado "retrasado"
 app.get('/usuarios/con-retrasos', async (req, res) => {
     try {
-        const [rows] = await pool.query(`
+        const [rows] = await connection.query(`
             SELECT DISTINCT
                 u.id_usuario,
                 u.nombre_completo
@@ -257,7 +257,7 @@ app.get('/usuarios/con-retrasos', async (req, res) => {
 // 4. Listar préstamos activos
 app.get('/prestamos/activos', async (req, res) => {
     try {
-        const [rows] = await pool.query(`
+        const [rows] = await connection.query(`
             SELECT 
                 p.id_prestamo,
                 p.fecha_prestamo,
@@ -286,7 +286,7 @@ app.get('/prestamos/activos', async (req, res) => {
 app.get('/prestamos/historial/:isbn', async (req, res) => {
     try {
         const { isbn } = req.params;
-        const [rows] = await pool.query(`
+        const [rows] = await connection.query(`
             SELECT 
                 p.id_prestamo,
                 p.fecha_prestamo,

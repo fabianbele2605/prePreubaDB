@@ -2,16 +2,17 @@ import fs from 'fs';
 import path from 'path';
 import csv from 'csv-parser';
 import { connection } from '../conexion_db.js';
+import { fileURLToPath } from 'url';
 
-// Construir la ruta del archivo CSV usando import.meta.url
-const __filename = new URL(import.meta.url).pathname.replace(/^\/[A-Za-z]:\//, '');
+const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const rutaArchivo = path.resolve(__dirname, '..', 'data', '03_prestamos.csv');
 
 export async function cargarPrestamosAlaBaseDeDatos() {
-  const rutaArchivo = path.resolve(__dirname, '../data/03_prestamos.csv');
   const prestamos = [];
 
   return new Promise((resolve, reject) => {
+    console.log('Ruta del archivo:', rutaArchivo); // Para depurar
     fs.createReadStream(rutaArchivo)
       .pipe(csv())
       .on('data', (fila) => {
