@@ -45,8 +45,60 @@ app.get('/prestamos/:id_prestamo', async (req, res) => {
                p.fecha_prestamo,
                p.fecha_devolucion,
                p.estado,
-               u.nombre_completo AS usuarios,
-               
-            `)
+               u.nombre_completo AS usuario,
+               l.isbn,
+               l.titulo AS libro
+            FROM prestamos p
+            LEFT JOIN usuarios u ON p.id_usuario = u.id_usuario
+            LEFT JOIN libros l ON p.isbn = l.isbn WHERE p.id_prestamo = ?
+            `, [id_prestamo]);
+
+            res.json(rows[0]);
+    } catch (error) {
+        res.status(500).json({
+            status: 'error',
+            endpoint: req.originalUrl,
+            method: req.method,
+            message: error.message
+        });
+    }
+});
+
+app.post('/prestamos', async (req, res) => {
+    try {
+        const {
+            id_usuario,
+            isbn,
+            fecha_prestamo,
+            fecha_devolucion,
+            estado
+        } = req.body
+
+        const query = `
+        INSERT INTO prestamos
+        (id_usuario, isbn, fecha_prestamo, fecha_devolucion, estado)
+        VALUES (?,?,?,?,?)
+        `
+
+        const values = [
+            id_usuario,
+            isbn,
+            fecha_prestamo,
+            fecha_devolucion,
+            estado
+        ]
+
+        const [result] = await dbConfig.query(query, values)
+
+        res.status(201).json({
+            mensaje: "prestamo creado exitosamente!"
+        })
+    } catch (error) {
+        res.status(500).json({
+            status: 'error',
+            endpoint: req.originalUrl,
+            method: req.method,
+            message: error.message
+        })
     }
 })
