@@ -147,4 +147,34 @@ app.put('/prestamos/:id_prestamo', async (req, res) => {
             message: error.message
         });
     }
+});
+
+
+app.delete('/prestamos/:id_prestamo', async (req, res) => {
+    try {
+        const { id_prestamo } = req.params
+
+        const query = `
+        DELETE FROM prestamos WHERE id_prestamo = ?
+        `
+
+        const values = [
+            id_prestamo
+        ]
+
+        const [result] = await dbConfig.query(query, values)
+
+        if (result.affectedRows != 0) {
+            return res.json({ mensaje: "prestamo eliminado" })
+        }
+    } catch (error) {
+        res.status(500).json({
+            status: 'error',
+            endpoint: req.originalUrl,
+            method: req.method,
+            message: error.message
+        });
+    }
 })
+
+
