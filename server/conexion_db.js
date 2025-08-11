@@ -4,7 +4,7 @@ import mysql from 'mysql2/promise';
 dotenv.config();
 
 // Configuración de la conexión a MySQL
-const dbConfig = {
+export const dbConfig = {
   host: process.env.DB_HOST || 'sql5.freesqldatabase.com',
   user: process.env.DB_USER || 'sql5794614',
   database: process.env.DB_NAME || 'sql5794614',
