@@ -102,3 +102,49 @@ app.post('/prestamos', async (req, res) => {
         })
     }
 })
+
+app.put('/prestamos/:id_prestamo', async (req, res) => {
+    try {
+        const { id_prestamo } = req.params
+
+        const {
+            id_usuario,
+            isbn,
+            fecha_prestamo,
+            fecha_devolucion,
+            estado
+        } = req.body
+
+        const query = `
+        UPDATE prestamos SET
+            id_usuario = ?,
+            isbn = ?,
+            fecha_prestamo = ?,
+            fecha_devolucion = ?,
+            estado = ?
+        WHERE id_prestamo = ?
+        `
+
+        const values = [
+            id_usuario,
+            isbn,
+            fecha_prestamo,
+            fecha_devolucion,
+            estado,
+            id_prestamo
+        ]
+
+        const [result] = await dbConfig.query(query, values)
+
+        if (result.affectedRows != 0) {
+            return res.json({ mensaje: "prestamo actualizado!"})
+        }
+    }  catch (error) {
+        res.status(500).json({
+            status: 'error',
+            endpoint: req.originalUrl,
+            method: req.method,
+            message: error.message
+        });
+    }
+})
