@@ -1,20 +1,17 @@
-/*se encargara de llamar al load*/
-import { cargarUsuariosAlaBaseDeDatos } from "./load_usuarios";
-import { cargarLibrosAlaBaseDeDatos } from "./load_libros";
-import { cargarPrestamosAlaBaseDeDatos } from "./load_prestamos";
+import { cargarUsuariosAlaBaseDeDatos } from './load_usuarios.js';
+import { cargarLibrosAlaBaseDeDatos } from './load_libros.js';
+import { cargarPrestamosAlaBaseDeDatos } from './load_prestamos.js';
 
-(async () => {
-    try {
-        console.log('🚀 Iniciando seeders...');
+async function runSeeders() {
+  console.log('🚀 Iniciando seeders...');
+  try {
+    await cargarUsuariosAlaBaseDeDatos(); // Primero usuarios
+    await cargarLibrosAlaBaseDeDatos();   // Luego libros
+    await cargarPrestamosAlaBaseDeDatos(); // Finalmente préstamos
+    console.log('✅ Seeders ejecutados correctamente');
+  } catch (error) {
+    console.error('❌ Error ejecutando los seeders:', error.message);
+  }
+}
 
-        await cargarUsuariosAlaBaseDeDatos()
-        await cargarLibrosAlaBaseDeDatos()
-        await cargarPrestamosAlaBaseDeDatos()
-
-        console.log('✅ Todos los seeders ejecutados correctamente.');
-    } catch (error) {
-        console.error('❌ Error ejecutando los seeders:', error.message);
-    } finally {
-        process.exit();
-    }
-})()
+runSeeders();

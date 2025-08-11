@@ -1,29 +1,28 @@
-import dotenv from 'dotenv'
-import mysql from 'mysql2/promise'
+import dotenv from 'dotenv';
+import mysql from 'mysql2/promise';
 
+dotenv.config();
 
-dotenv.config() 
-
-// configuracion de la conexion a mysql
-export const dbConfig = {
-    host: 'sql5.freesqldatabase.com',
-    user: 'sql5794456',
-    database: 'sql5794456',
-    password: 'TyTqswyG64',
-    port: 3306
+// Configuración de la conexión a MySQL
+const dbConfig = {
+  host: process.env.DB_HOST || 'sql5.freesqldatabase.com',
+  user: process.env.DB_USER || 'sql5794614',
+  database: process.env.DB_NAME || 'sql5794614',
+  password: process.env.DB_PASSWORD || 'dTAGdMGFGx',
+  port: process.env.DB_PORT || 3306
 };
 
-// crear la conexion
-let connection;
+// Crear la conexión
 async function connectDB() {
-    try {
-        connection = await mysql.createConnection(dbConfig);
-        console.log('Conexion exitosa a MySQL!');
-    } catch (err) {
-        console.error('Error al conectar con la base de datos:', err.stack);
-        process.exit(1);
-    }
+  try {
+    const conn = await mysql.createConnection(dbConfig);
+    console.log('✅ Conexión exitosa a MySQL!');
+    return conn;
+  } catch (err) {
+    console.error('❌ Error al conectar con la base de datos:', err.stack);
+    process.exit(1);
+  }
 }
 
-// conectar base de datos
-connectDB();
+// Exportar la conexión como nombrada
+export const connection = await connectDB();

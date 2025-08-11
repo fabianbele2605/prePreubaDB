@@ -1,42 +1,49 @@
 import fs from 'fs';
-import path, { resolve } from 'path';
+import path from 'path';
 import csv from 'csv-parser';
-import { dbConfig } from '../conexion_db';
+import { connection } from '../conexion_db.js';
 
-
-
+// Construir la ruta del archivo CSV usando import.meta.url
+const __filename = new URL(import.meta.url).pathname.replace(/^\/[A-Za-z]:\//, '');
+const __dirname = path.dirname(__filename);
 
 export async function cargarLibrosAlaBaseDeDatos() {
-    
-    const rutaArchivo = path.resolve('server/data/02_libros.csv');
-    const libros = [];
+  const rutaArchivo = path.resolve(__dirname, '../data/02_libros.csv');
+  const libros = [];
 
-    return new Promise((resolve, reject) => {
-        fs.createReadStream(rutaArchivo)
-           .pipe(csv())
-           .on("data", (fila) => {
-            libros.push([
-                fila.isbn,
-                fila.titulo.trim(),
-                fila.anio_publicacion,
-                fila.autor
-            ]);
-           })
-           .on('end', async () => {
-              try {
-                const sql = 'INSERT INTO libros (isbn,titulo,anio_publicacion,autor) VALUES ?';
-                const [result] = await dbConfig.query(sql, [libros]);
-
-                console.log(`✅ Se insetaron ${result.affectedRows} libros.`);
-                resolve();
-              } catch (error) {
-                console.error('❌ Error al insertar libros:', error.message);
-                reject(error)
-              }
-           })
-           .on('error', (err) => {
-              console.error('❌ Error al leer el archivo CSV de libros:', err.message);
-              reject(err)
-           });
-    });
+  return new Promise((resolve, reject) => {
+    fs.createReadStream(rutaArchivo)
+      .pipe(csv())
+      .on('data', (fila) => {
+        libros.push([
+          fila.isbn,
+          fila.titulo?.trim(),
+          fila.anio_publicacion,
+          fila.autor
+        ]);
+      })
+      .on('end', async () => {
+        try {
+          await connection.query(`
+            CREATE TABLE IF NOT EXISTS libros (
+              isbn VARCHAR(20) PRIMARY KEY,
+              titulo VARCHAR(255) NOT NULL,
+              anio_publicacion YEAR,
+              autor VARCHAR(255) NOT NULL
+            )
+          `);
+          const sql = 'INSERT INTO libros (isbn, titulo, anio_publicacion, autor) VALUES ?';
+          const [result] = await connection.query(sql, [libros]);
+          console.log(`✅ Se insertaron ${result.affectedRows} libros.`);
+          resolve();
+        } catch (error) {
+          console.error('❌ Error al insertar libros:', error.message);
+          reject(error);
+        }
+      })
+      .on('error', (err) => {
+        console.error('❌ Error al leer el archivo CSV de libros:', err.message);
+        reject(err);
+      });
+  });
 }
