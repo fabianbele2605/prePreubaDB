@@ -62,7 +62,13 @@ export async function cargarPrestamosAlaBaseDeDatos() {
         // Cargar el resto de los préstamos desde el CSV
         await new Promise((resolve, reject) => {
             fs.createReadStream(rutaArchivo)
-                .pipe(csv({ separator: ';', strict: true, skipLines: 0 }))
+                .pipe(csv({
+                    separator: ';',
+                    strict: true,
+                    skipLines: 0,
+                    // --- NUEVO: Limpiar las cabeceras del CSV para eliminar espacios y caracteres extra ---
+                    mapHeaders: ({ header }) => header.trim().replace(/"/g, ''),
+                }))
                 .on("data", (fila) => {
                     console.log('📄 Fila parseada:', JSON.stringify(fila));
                     console.log('📄 Claves de la fila:', Object.keys(fila));
@@ -71,8 +77,7 @@ export async function cargarPrestamosAlaBaseDeDatos() {
                     const estado = fila.estado?.trim() === 'devuelto' ? 'entregado' : fila.estado?.trim();
                     const id_usuario = parseInt(fila.id_usuario?.trim());
                     const isbn = fila.isbn?.trim();
-                    const fecha_prestamo = fila.fecha_prestamo?.trim().replace(/\r|\n/g, ''); // Eliminar \r y \n
-                    // --- CAMBIO AQUI: TRATAR 'fecha_devolucion' como nula si está vacía ---
+                    const fecha_prestamo = fila.fecha_prestamo?.trim().replace(/\r|\n/g, '');
                     const fecha_devolucion_str = fila.fecha_devolucion?.trim().replace(/\r|\n/g, '');
                     const fecha_devolucion = fecha_devolucion_str === '' ? null : fecha_devolucion_str;
 
@@ -88,8 +93,7 @@ export async function cargarPrestamosAlaBaseDeDatos() {
                     // Validar que los campos requeridos existan
                     const esFechaDevolucionValida = !fecha_devolucion || fecha_devolucion.match(/^\d{4}-\d{2}-\d{2}$/);
                     const esFechaDevolucionRequerida = estado === 'entregado' || estado === 'retrasado';
-
-                    // --- CAMBIO AQUI: NUEVA LOGICA DE VALIDACION ---
+                    
                     if (
                         !isNaN(id_usuario) &&
                         isbn && isbn.length > 0 &&
