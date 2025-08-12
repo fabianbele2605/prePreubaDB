@@ -18,13 +18,13 @@ const pool = mysql.createPool({
     queueLimit: 0
 });
 
-async function limpiarTablas() {
+async function limpiarTablas(connection) {
     try {
-        await pool.query('SET FOREIGN_KEY_CHECKS = 0');
-        await pool.query('TRUNCATE TABLE prestamos');
-        await pool.query('TRUNCATE TABLE libros');
-        await pool.query('TRUNCATE TABLE usuarios');
-        await pool.query('SET FOREIGN_KEY_CHECKS = 1');
+        await connection.query('SET FOREIGN_KEY_CHECKS = 0');
+        await connection.query('TRUNCATE TABLE prestamos');
+        await connection.query('TRUNCATE TABLE libros');
+        await connection.query('TRUNCATE TABLE usuarios');
+        await connection.query('SET FOREIGN_KEY_CHECKS = 1');
         console.log('✅ Tablas limpiadas.');
     } catch (error) {
         console.error('❌ Error al limpiar tablas:', error.message);
@@ -33,27 +33,37 @@ async function limpiarTablas() {
 }
 
 (async () => {
+    const connection = await pool.getConnection();
     try {
         console.log('🚀 Iniciando carga de datos...');
-        await limpiarTablas();
+        await connection.beginTransaction();
+        
+        await limpiarTablas(connection);
         await cargarUsuariosAlaBaseDeDatos();
         console.log('✅ Carga de usuarios completada.');
+        
         try {
             await cargarLibrosAlaBaseDeDatos();
             console.log('✅ Carga de libros completada.');
         } catch (error) {
             console.warn('⚠️ Continuando a pesar del error en libros:', error.message);
         }
+        
         try {
             await cargarPrestamosAlaBaseDeDatos();
             console.log('✅ Carga de préstamos completada.');
         } catch (error) {
             console.warn('⚠️ Error en préstamos, pero continuando:', error.message);
         }
+        
+        await connection.commit();
+        console.log('✅ Transacción global confirmada.');
     } catch (error) {
-        console.error('❌ Error crítico al cargar datos:', error.message);
+        await connection.rollback();
+        console.error('❌ Error crítico al cargar datos, transacción revertida:', error.message);
         console.error('Detalles:', error);
     } finally {
+        connection.release();
         await pool.end();
         console.log('🔌 Conexión a la base de datos cerrada.');
         process.exit();
