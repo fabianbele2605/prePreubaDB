@@ -1,0 +1,4 @@
+id_usuario,isbn,fecha_prestamo,fecha_devolucion,estado
+1,978-0-13-079650-9,2025-07-26,2025-08-10,entregado
+2,978-0-609-15622-3,2025-06-28,2025-07-29,retrasado
+3,978-1-75600-708-6,2025-07-12,2025-07-15,retrasado
