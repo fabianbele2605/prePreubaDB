@@ -21,10 +21,13 @@ export async function cargarPrestamosAlaBaseDeDatos() {
         if (usuarios.length === 0) {
             throw new Error('El id_usuario = 0 no existe en la tabla usuarios.');
         }
+        console.log('✅ Verificado: id_usuario = 0 existe en la tabla usuarios.');
+        
         const [libros] = await pool.query('SELECT isbn FROM libros WHERE isbn = ?', ['978-0-13-079650-9']);
         if (libros.length === 0) {
             throw new Error('El isbn = 978-0-13-079650-9 no existe en la tabla libros.');
         }
+        console.log('✅ Verificado: isbn = 978-0-13-079650-9 existe en la tabla libros.');
 
         // Insertar manualmente un préstamo con id_prestamo = 0
         await pool.query(
@@ -33,15 +36,16 @@ export async function cargarPrestamosAlaBaseDeDatos() {
         );
         console.log('✅ Préstamo con id_prestamo = 0 insertado manualmente.');
     } catch (error) {
-        console.error('❌ Error al insertar préstamo con id = 0:', error.message);
+        console.error('❌ Error al insertar o verificar préstamo con id = 0:', error.message);
         throw error;
     }
 
     // Cargar el resto de los préstamos desde el CSV
     return new Promise((resolve, reject) => {
         fs.createReadStream(rutaArchivo)
-            .pipe(csv())
+            .pipe(csv({ strict: true, skipLines: 0 }))
             .on("data", (fila) => {
+                console.log('📄 Fila leída:', JSON.stringify(fila));
                 const estado = fila.estado === 'devuelto' ? 'entregado' : fila.estado;
                 if (fila.id_usuario && fila.isbn && fila.fecha_prestamo) {
                     prestamos.push([
