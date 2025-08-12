@@ -1,12 +1,9 @@
-/*se encarga de cargar los usuarios a la base de datos*/
-import fs from 'fs'; // es la que me permite leer archivos
-import path from 'path'; // esta muestra la ruta actual
+import fs from 'fs';
+import path from 'path';
 import csv from 'csv-parser';
-import { pool } from "../conexion_db.js"
-
+import { pool } from "../conexion_db.js";
 
 export async function cargarUsuariosAlaBaseDeDatos() {
-
     const rutaArchivo = path.resolve('server/data/01_usuarios.csv');
     const usuarios = [];
 
@@ -15,20 +12,18 @@ export async function cargarUsuariosAlaBaseDeDatos() {
             .pipe(csv())
             .on("data", (fila) => {
                 usuarios.push([
-                    fila.id_usuario,
-                    fila.nombre_completo.trim(),
+                    fila.nombre ? fila.nombre.trim() : fila.nombre_completo.trim(), // Soporta ambos nombres
                     fila.identificacion,
-                    fila.correo,
-                    fila.telefono
+                    fila.correo || null,
+                    fila.telefono || null
                 ]);
             })
             .on('end', async () => {
                 try {
-                    const sql = 'INSERT INTO usuarios (id_usuario,nombre_completo,identificacion,correo,telefono) VALUES ?';
+                    const sql = 'INSERT INTO usuarios (nombre, identificacion, correo, telefono) VALUES ?';
                     const [result] = await pool.query(sql, [usuarios]);
-
-                    console.log(`✅ Se insertaron ${result.affectedRows} autores.`);
-                    resolve(); // Termina exitosamente
+                    console.log(`✅ Se insertaron ${result.affectedRows} usuarios.`);
+                    resolve();
                 } catch (error) {
                     console.error('❌ Error al insertar usuarios:', error.message);
                     reject(error);

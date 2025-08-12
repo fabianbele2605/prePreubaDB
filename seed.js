@@ -1,6 +1,6 @@
-import { cargarUsuariosAlaBaseDeDatos } from "./load_usuarios.js";
-import { cargarLibrosAlaBaseDeDatos } from "./load_libros.js";
-import { cargarPrestamosAlaBaseDeDatos } from "./load_prestamos.js";
+import { cargarUsuariosAlaBaseDeDatos } from "./server/seeders/load_usuarios.js";
+import { cargarLibrosAlaBaseDeDatos } from "./server/seeders/load_libros.js";
+import { cargarPrestamosAlaBaseDeDatos } from "./server/seeders/load_prestamos.js";
 
 (async () => {
     try {
