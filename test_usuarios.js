@@ -7,6 +7,7 @@ import { cargarUsuariosAlaBaseDeDatos } from "./server/seeders/load_usuarios.js"
         console.log('✅ Carga de usuarios completada.');
     } catch (error) {
         console.error('❌ Error al cargar usuarios:', error.message);
+        console.error('Detalles:', error);
     } finally {
         process.exit();
     }

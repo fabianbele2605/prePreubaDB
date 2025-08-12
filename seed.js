@@ -11,6 +11,7 @@ import { cargarPrestamosAlaBaseDeDatos } from "./server/seeders/load_prestamos.j
         console.log('✅ Todos los seeders ejecutados correctamente.');
     } catch (error) {
         console.error('❌ Error ejecutando los seeders:', error.message);
+        console.error('Detalles:', error);
     } finally {
         process.exit();
     }

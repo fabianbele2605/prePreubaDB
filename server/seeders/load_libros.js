@@ -14,7 +14,7 @@ export async function cargarLibrosAlaBaseDeDatos() {
                 libros.push([
                     fila.isbn,
                     fila.titulo.trim(),
-                    fila.anio_de_publicacion || null, // Manejar valores vacíos
+                    fila.anio_de_publicacion || null,
                     fila.autor || null
                 ]);
             })
@@ -26,6 +26,7 @@ export async function cargarLibrosAlaBaseDeDatos() {
                     resolve();
                 } catch (error) {
                     console.error('❌ Error al insertar libros:', error.message);
+                    console.error('Detalles:', error);
                     reject(error);
                 }
             })

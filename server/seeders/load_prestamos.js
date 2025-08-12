@@ -11,7 +11,6 @@ export async function cargarPrestamosAlaBaseDeDatos() {
         fs.createReadStream(rutaArchivo)
             .pipe(csv())
             .on("data", (fila) => {
-                // Mapear "devuelto" a "entregado" si es necesario
                 const estado = fila.estado === 'devuelto' ? 'entregado' : fila.estado;
                 prestamos.push([
                     fila.id_usuario,
@@ -29,6 +28,7 @@ export async function cargarPrestamosAlaBaseDeDatos() {
                     resolve();
                 } catch (error) {
                     console.error('❌ Error al insertar prestamos:', error.message);
+                    console.error('Detalles:', error);
                     reject(error);
                 }
             })

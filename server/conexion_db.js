@@ -14,14 +14,4 @@ const pool = mysql.createPool({
     queueLimit: 0
 });
 
-async function probarConexionConLaBaseDeDatos() {
-    try {
-        const connection = await pool.getConnection();
-        console.log('✅ Conexión a la base de datos exitosa');
-        connection.release();
-    } catch (error) {
-        console.error('❌ Error al conectar con la base de datos:', error.message);
-    }
-}
-
-probarConexionConLaBaseDeDatos();
+export { pool }; // Exportación nombrada

@@ -18,9 +18,11 @@ async function probarConexionConLaBaseDeDatos() {
     try {
         const connection = await pool.getConnection();
         console.log('✅ Conexión a la base de datos exitosa');
+        console.log(`Conectado a: ${process.env.DB_NAME} como ${process.env.DB_USER}`);
         connection.release();
     } catch (error) {
         console.error('❌ Error al conectar con la base de datos:', error.message);
+        console.error('Detalles:', error);
     }
 }
 
