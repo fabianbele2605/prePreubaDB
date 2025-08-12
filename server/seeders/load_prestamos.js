@@ -20,6 +20,10 @@ export async function cargarPrestamosAlaBaseDeDatos() {
     try {
         await connection.beginTransaction();
 
+        // Activar NO_AUTO_VALUE_ON_ZERO
+        await connection.query('SET SESSION sql_mode = "NO_AUTO_VALUE_ON_ZERO"');
+        console.log('✅ Modo NO_AUTO_VALUE_ON_ZERO activado.');
+
         // Verificar que id_usuario = 0 y isbn = '978-0-13-079650-9' existan
         const [usuarios] = await connection.query('SELECT id_usuario FROM usuarios WHERE id_usuario = ?', [0]);
         console.log('📄 Resultado de la verificación de usuarios:', JSON.stringify(usuarios));
@@ -36,19 +40,25 @@ export async function cargarPrestamosAlaBaseDeDatos() {
         console.log('✅ Verificado: isbn = 978-0-13-079650-9 existe en la tabla libros.');
 
         // Insertar manualmente un préstamo con id_prestamo = 0
-        await connection.query(
-            'INSERT INTO prestamos (id_prestamo, id_usuario, isbn, fecha_prestamo, estado) VALUES (?, ?, ?, ?, ?)',
-            [0, 0, '978-0-13-079650-9', '2025-08-11', 'activo']
-        );
-        console.log('✅ Préstamo con id_prestamo = 0 insertado manualmente.');
+        try {
+            await connection.query(
+                'INSERT INTO prestamos (id_prestamo, id_usuario, isbn, fecha_prestamo, estado) VALUES (?, ?, ?, ?, ?)',
+                [0, 0, '978-0-13-079650-9', '2025-08-11', 'activo']
+            );
+            console.log('✅ Préstamo con id_prestamo = 0 insertado manualmente.');
 
-        // Verificar que el préstamo se insertó
-        const [prestamo] = await connection.query('SELECT id_prestamo FROM prestamos WHERE id_prestamo = ?', [0]);
-        console.log('📄 Resultado de la verificación de préstamo:', JSON.stringify(prestamo));
-        if (prestamo.length === 0) {
-            throw new Error('No se encontró id_prestamo = 0 después de la inserción.');
+            // Verificar que el préstamo se insertó
+            const [prestamo] = await connection.query('SELECT id_prestamo FROM prestamos WHERE id_prestamo = ?', [0]);
+            console.log('📄 Resultado de la verificación de préstamo:', JSON.stringify(prestamo));
+            if (prestamo.length === 0) {
+                console.warn('⚠️ No se encontró id_prestamo = 0 después de la inserción, continuando con el CSV.');
+            } else {
+                console.log('✅ Verificado: id_prestamo = 0 existe en la tabla prestamos.');
+            }
+        } catch (error) {
+            console.warn('⚠️ Error al insertar o verificar id_prestamo = 0:', error.message);
+            console.warn('⚠️ Continuando con la carga del CSV a pesar del error.');
         }
-        console.log('✅ Verificado: id_prestamo = 0 existe en la tabla prestamos.');
 
         // Cargar el resto de los préstamos desde el CSV
         await new Promise((resolve, reject) => {
@@ -73,6 +83,7 @@ export async function cargarPrestamosAlaBaseDeDatos() {
                     try {
                         if (prestamos.length > 0) {
                             // Verificar que todos los id_usuario e isbn existan
+                            const validPrestamos = [];
                             for (const prestamo of prestamos) {
                                 const [usuarios] = await connection.query('SELECT id_usuario FROM usuarios WHERE id_usuario = ?', [prestamo[0]]);
                                 if (usuarios.length === 0) {
@@ -84,11 +95,16 @@ export async function cargarPrestamosAlaBaseDeDatos() {
                                     console.warn(`⚠️ isbn = ${prestamo[1]} no existe en la tabla libros. Fila ignorada.`);
                                     continue;
                                 }
+                                validPrestamos.push(prestamo);
                             }
 
-                            const sql = 'INSERT INTO prestamos (id_usuario, isbn, fecha_prestamo, fecha_devolucion, estado) VALUES ?';
-                            const [result] = await connection.query(sql, [prestamos]);
-                            console.log(`✅ Se insertaron ${result.affectedRows} préstamos desde CSV.`);
+                            if (validPrestamos.length > 0) {
+                                const sql = 'INSERT INTO prestamos (id_usuario, isbn, fecha_prestamo, fecha_devolucion, estado) VALUES ?';
+                                const [result] = await connection.query(sql, [validPrestamos]);
+                                console.log(`✅ Se insertaron ${result.affectedRows} préstamos desde CSV.`);
+                            } else {
+                                console.log('⚠️ No se encontraron préstamos válidos en el CSV después de la validación.');
+                            }
                         } else {
                             console.log('⚠️ No se encontraron préstamos válidos en el CSV.');
                         }
@@ -116,6 +132,7 @@ export async function cargarPrestamosAlaBaseDeDatos() {
         console.error('❌ Error en la carga de préstamos, transacción revertida:', error.message);
         throw error;
     } finally {
+        await connection.query('SET SESSION sql_mode = ""');
         connection.release();
     }
 }
